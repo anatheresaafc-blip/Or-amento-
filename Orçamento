@@ -1,0 +1,1828 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Espaço Sentir - Orçamento</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js" integrity="sha512-GsLlZN/3F2ErC5ifS5QtgpiJtWd43JWSuIgh7mbzZ8zBps+dvLusV+eNQATqgA/HdeKFVgA5v3S/cIrLF7QnIg==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+    <style>
+        /* ===== RESET & BASE ===== */
+        *,
+        *::before,
+        *::after {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+        :root {
+            --primary: #7BA8C4;
+            --primary-dark: #5a8aaa;
+            --primary-light: #b5d4e8;
+            --secondary: #D4A5A5;
+            --secondary-light: #eccccc;
+            --bg: #f5f7fa;
+            --card: #ffffff;
+            --text: #2d3748;
+            --text-light: #718096;
+            --border: #e2e8f0;
+            --success: #48bb78;
+            --shadow: 0 8px 30px rgba(0, 0, 0, 0.08);
+            --radius: 16px;
+            --radius-sm: 10px;
+            --transition: 0.3s ease;
+        }
+        html {
+            scroll-behavior: smooth;
+        }
+        body {
+            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            line-height: 1.6;
+            min-height: 100vh;
+        }
+        a {
+            color: var(--primary);
+            text-decoration: none;
+        }
+
+        /* ===== LOGIN OVERLAY ===== */
+        #loginOverlay {
+            position: fixed;
+            inset: 0;
+            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 9999;
+            padding: 20px;
+            transition: opacity 0.5s ease;
+        }
+        #loginOverlay.hidden {
+            opacity: 0;
+            pointer-events: none;
+        }
+        .login-box {
+            background: var(--card);
+            border-radius: var(--radius);
+            padding: 48px 40px 40px;
+            width: 100%;
+            max-width: 420px;
+            box-shadow: 0 25px 60px rgba(0, 0, 0, 0.2);
+            text-align: center;
+            animation: fadeUp 0.6s ease;
+        }
+        @keyframes fadeUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        .login-box .logo-login {
+            width: 90px;
+            height: 90px;
+            background: var(--primary);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 16px;
+            font-size: 36px;
+            font-weight: 700;
+            color: #fff;
+            box-shadow: 0 8px 24px rgba(123, 168, 196, 0.3);
+        }
+        .login-box h2 {
+            font-size: 24px;
+            color: var(--text);
+            margin-bottom: 4px;
+        }
+        .login-box p.sub {
+            color: var(--text-light);
+            font-size: 14px;
+            margin-bottom: 28px;
+        }
+        .login-box label {
+            display: block;
+            text-align: left;
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--text);
+            margin-bottom: 6px;
+        }
+        .login-box .input-group {
+            position: relative;
+            margin-bottom: 20px;
+        }
+        .login-box .input-group input {
+            width: 100%;
+            padding: 14px 16px;
+            border: 2px solid var(--border);
+            border-radius: var(--radius-sm);
+            font-size: 16px;
+            transition: var(--transition);
+            background: var(--bg);
+        }
+        .login-box .input-group input:focus {
+            border-color: var(--primary);
+            outline: none;
+            box-shadow: 0 0 0 4px rgba(123, 168, 196, 0.15);
+            background: #fff;
+        }
+        .login-box .btn-primary {
+            width: 100%;
+            padding: 14px;
+            background: var(--primary);
+            color: #fff;
+            border: none;
+            border-radius: var(--radius-sm);
+            font-size: 17px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: var(--transition);
+        }
+        .login-box .btn-primary:hover {
+            background: var(--primary-dark);
+            transform: translateY(-1px);
+        }
+        .login-error {
+            color: #e53e3e;
+            font-size: 14px;
+            margin-top: 12px;
+            min-height: 24px;
+        }
+
+        /* ===== APP CONTAINER ===== */
+        #appContainer {
+            display: none;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px 24px 60px;
+        }
+        #appContainer.active {
+            display: block;
+            animation: fadeUp 0.5s ease;
+        }
+
+        /* ===== HEADER ===== */
+        .header {
+            background: var(--card);
+            border-radius: var(--radius);
+            padding: 24px 32px;
+            box-shadow: var(--shadow);
+            display: flex;
+            align-items: center;
+            gap: 24px;
+            flex-wrap: wrap;
+            margin-bottom: 28px;
+        }
+        .header-logo {
+            flex-shrink: 0;
+            width: 72px;
+            height: 72px;
+            background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 28px;
+            font-weight: 700;
+            color: #fff;
+            box-shadow: 0 6px 18px rgba(123, 168, 196, 0.3);
+        }
+        .header-info {
+            flex: 1;
+            min-width: 200px;
+        }
+        .header-info h1 {
+            font-size: 26px;
+            font-weight: 700;
+            color: var(--text);
+            letter-spacing: -0.5px;
+        }
+        .header-info .tagline {
+            font-size: 14px;
+            color: var(--text-light);
+            margin-top: 2px;
+        }
+        .header-contact {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px 24px;
+            font-size: 14px;
+            color: var(--text-light);
+            margin-top: 6px;
+        }
+        .header-contact span {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .header-contact i {
+            font-style: normal;
+            font-weight: 600;
+            color: var(--primary);
+        }
+        .header-badge {
+            background: var(--secondary-light);
+            color: #8b5e5e;
+            padding: 6px 16px;
+            border-radius: 20px;
+            font-size: 13px;
+            font-weight: 600;
+        }
+
+        /* ===== PROGRESS BAR ===== */
+        .progress-container {
+            background: var(--card);
+            border-radius: var(--radius);
+            padding: 20px 32px;
+            box-shadow: var(--shadow);
+            margin-bottom: 28px;
+        }
+        .progress-steps {
+            display: flex;
+            justify-content: space-between;
+            position: relative;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        .progress-steps::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: var(--border);
+            transform: translateY(-50%);
+            z-index: 0;
+        }
+        .progress-steps .step {
+            position: relative;
+            z-index: 1;
+            background: var(--card);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 4px;
+            cursor: pointer;
+            padding: 0 8px;
+            transition: var(--transition);
+        }
+        .progress-steps .step .circle {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: var(--border);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            font-size: 16px;
+            color: var(--text-light);
+            transition: var(--transition);
+            border: 3px solid transparent;
+        }
+        .progress-steps .step.active .circle {
+            background: var(--primary);
+            color: #fff;
+            border-color: var(--primary-light);
+            box-shadow: 0 4px 12px rgba(123, 168, 196, 0.3);
+        }
+        .progress-steps .step.done .circle {
+            background: var(--success);
+            color: #fff;
+        }
+        .progress-steps .step .label {
+            font-size: 12px;
+            font-weight: 600;
+            color: var(--text-light);
+            text-align: center;
+            transition: var(--transition);
+            max-width: 80px;
+        }
+        .progress-steps .step.active .label {
+            color: var(--primary);
+        }
+        .progress-steps .step.done .label {
+            color: var(--success);
+        }
+
+        /* ===== SECTIONS ===== */
+        .section-card {
+            background: var(--card);
+            border-radius: var(--radius);
+            padding: 32px 36px;
+            box-shadow: var(--shadow);
+            margin-bottom: 28px;
+            display: none;
+            animation: fadeUp 0.4s ease;
+        }
+        .section-card.active {
+            display: block;
+        }
+        .section-card h3 {
+            font-size: 22px;
+            font-weight: 700;
+            color: var(--text);
+            margin-bottom: 4px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .section-card h3 .num {
+            background: var(--primary);
+            color: #fff;
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 16px;
+            flex-shrink: 0;
+        }
+        .section-card .desc {
+            color: var(--text-light);
+            font-size: 14px;
+            margin-bottom: 24px;
+            margin-left: 42px;
+        }
+
+        /* ===== FORM ELEMENTS ===== */
+        .form-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px 28px;
+        }
+        .form-grid.full {
+            grid-template-columns: 1fr;
+        }
+        .form-group {
+            display: flex;
+            flex-direction: column;
+        }
+        .form-group.full {
+            grid-column: 1 / -1;
+        }
+        .form-group label {
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--text);
+            margin-bottom: 5px;
+        }
+        .form-group label .required {
+            color: #e53e3e;
+        }
+        .form-group input,
+        .form-group select,
+        .form-group textarea {
+            padding: 12px 14px;
+            border: 2px solid var(--border);
+            border-radius: var(--radius-sm);
+            font-size: 15px;
+            font-family: inherit;
+            transition: var(--transition);
+            background: var(--bg);
+            resize: vertical;
+        }
+        .form-group input:focus,
+        .form-group select:focus,
+        .form-group textarea:focus {
+            border-color: var(--primary);
+            outline: none;
+            box-shadow: 0 0 0 4px rgba(123, 168, 196, 0.12);
+            background: #fff;
+        }
+        .form-group textarea {
+            min-height: 80px;
+        }
+        .form-group .hint {
+            font-size: 12px;
+            color: var(--text-light);
+            margin-top: 4px;
+        }
+
+        /* ===== PERGUNTAS (Escuta Ativa) ===== */
+        .perguntas-list {
+            display: flex;
+            flex-direction: column;
+            gap: 18px;
+        }
+        .pergunta-item {
+            background: var(--bg);
+            border-radius: var(--radius-sm);
+            padding: 18px 20px;
+            border-left: 4px solid var(--secondary);
+        }
+        .pergunta-item .q {
+            font-weight: 600;
+            font-size: 15px;
+            color: var(--text);
+            margin-bottom: 8px;
+        }
+        .pergunta-item .q .num-q {
+            color: var(--secondary);
+            margin-right: 6px;
+        }
+        .pergunta-item textarea {
+            width: 100%;
+            padding: 12px 14px;
+            border: 2px solid var(--border);
+            border-radius: var(--radius-sm);
+            font-size: 15px;
+            font-family: inherit;
+            transition: var(--transition);
+            background: #fff;
+            min-height: 64px;
+        }
+        .pergunta-item textarea:focus {
+            border-color: var(--secondary);
+            outline: none;
+            box-shadow: 0 0 0 4px rgba(212, 165, 165, 0.12);
+        }
+
+        /* ===== ESPECIALIDADES ===== */
+        .especialidades-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+        }
+        .esp-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            background: var(--bg);
+            border-radius: var(--radius-sm);
+            padding: 12px 16px;
+            cursor: pointer;
+            transition: var(--transition);
+            border: 2px solid transparent;
+        }
+        .esp-item:hover {
+            border-color: var(--primary-light);
+        }
+        .esp-item.selected {
+            border-color: var(--primary);
+            background: rgba(123, 168, 196, 0.08);
+        }
+        .esp-item input[type="checkbox"] {
+            width: 20px;
+            height: 20px;
+            accent-color: var(--primary);
+            cursor: pointer;
+            flex-shrink: 0;
+        }
+        .esp-item .esp-info {
+            flex: 1;
+        }
+        .esp-item .esp-info .esp-nome {
+            font-weight: 600;
+            font-size: 15px;
+        }
+        .esp-item .esp-info .esp-desc {
+            font-size: 12px;
+            color: var(--text-light);
+        }
+        .esp-item .freq-select {
+            width: 100px;
+            padding: 6px 8px;
+            border: 2px solid var(--border);
+            border-radius: 8px;
+            font-size: 13px;
+            background: #fff;
+            cursor: pointer;
+            flex-shrink: 0;
+        }
+        .esp-item .freq-select:focus {
+            border-color: var(--primary);
+            outline: none;
+        }
+
+        /* ===== LOGÍSTICA ===== */
+        .logistica-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+        .dias-horarios {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        .dia-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            background: var(--bg);
+            border-radius: 8px;
+            padding: 8px 14px;
+        }
+        .dia-item label {
+            font-weight: 600;
+            min-width: 60px;
+            font-size: 14px;
+        }
+        .dia-item input[type="time"] {
+            padding: 6px 10px;
+            border: 2px solid var(--border);
+            border-radius: 8px;
+            font-size: 14px;
+            background: #fff;
+            flex: 1;
+        }
+        .dia-item input[type="time"]:focus {
+            border-color: var(--primary);
+            outline: none;
+        }
+
+        /* ===== PLANOS / RESUMO ===== */
+        .plano-destaque {
+            background: linear-gradient(135deg, var(--primary-light), rgba(123, 168, 196, 0.1));
+            border-radius: var(--radius-sm);
+            padding: 20px 24px;
+            margin: 16px 0 24px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 12px;
+            border: 2px solid var(--primary);
+        }
+        .plano-destaque .plano-nome {
+            font-size: 20px;
+            font-weight: 700;
+            color: var(--primary-dark);
+        }
+        .plano-destaque .plano-preco {
+            font-size: 28px;
+            font-weight: 800;
+            color: var(--text);
+        }
+        .plano-destaque .plano-preco small {
+            font-size: 16px;
+            font-weight: 400;
+            color: var(--text-light);
+        }
+
+        /* ===== NAV BTNS ===== */
+        .nav-buttons {
+            display: flex;
+            justify-content: space-between;
+            gap: 16px;
+            margin-top: 28px;
+            flex-wrap: wrap;
+        }
+        .btn {
+            padding: 12px 32px;
+            border-radius: var(--radius-sm);
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: var(--transition);
+            border: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .btn:disabled {
+            opacity: 0.4;
+            cursor: not-allowed;
+            transform: none !important;
+        }
+        .btn-primary {
+            background: var(--primary);
+            color: #fff;
+        }
+        .btn-primary:hover:not(:disabled) {
+            background: var(--primary-dark);
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(123, 168, 196, 0.3);
+        }
+        .btn-secondary {
+            background: var(--bg);
+            color: var(--text);
+            border: 2px solid var(--border);
+        }
+        .btn-secondary:hover:not(:disabled) {
+            background: var(--border);
+        }
+        .btn-success {
+            background: var(--success);
+            color: #fff;
+        }
+        .btn-success:hover:not(:disabled) {
+            background: #38a169;
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(72, 187, 120, 0.3);
+        }
+        .btn-pdf {
+            background: #e53e3e;
+            color: #fff;
+        }
+        .btn-pdf:hover:not(:disabled) {
+            background: #c53030;
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(229, 62, 62, 0.3);
+        }
+
+        /* ===== RESUMO FINAL ===== */
+        #resumoFinal {
+            background: var(--card);
+            border-radius: var(--radius);
+            padding: 32px 36px;
+            box-shadow: var(--shadow);
+            margin-bottom: 28px;
+            display: none;
+        }
+        #resumoFinal.active {
+            display: block;
+            animation: fadeUp 0.4s ease;
+        }
+        #resumoFinal h3 {
+            font-size: 22px;
+            margin-bottom: 16px;
+        }
+        .resumo-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 24px 36px;
+        }
+        .resumo-grid .bloco {
+            background: var(--bg);
+            border-radius: var(--radius-sm);
+            padding: 16px 20px;
+        }
+        .resumo-grid .bloco h4 {
+            font-size: 16px;
+            color: var(--primary);
+            margin-bottom: 8px;
+            border-bottom: 2px solid var(--primary-light);
+            padding-bottom: 6px;
+        }
+        .resumo-grid .bloco p,
+        .resumo-grid .bloco li {
+            font-size: 14px;
+            color: var(--text);
+            line-height: 1.7;
+        }
+        .resumo-grid .bloco ul {
+            list-style: none;
+            padding: 0;
+        }
+        .resumo-grid .bloco ul li::before {
+            content: '✓ ';
+            color: var(--success);
+            font-weight: 700;
+        }
+
+        /* ===== PDF PREVIEW (for generation) ===== */
+        #pdfContent {
+            background: #fff;
+            padding: 40px 36px;
+            border-radius: var(--radius-sm);
+            font-family: 'Segoe UI', system-ui, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            display: none;
+        }
+        #pdfContent .pdf-header {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            border-bottom: 3px solid var(--primary);
+            padding-bottom: 20px;
+            margin-bottom: 24px;
+        }
+        #pdfContent .pdf-header .pdf-logo {
+            width: 64px;
+            height: 64px;
+            background: var(--primary);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            font-weight: 700;
+            color: #fff;
+            flex-shrink: 0;
+        }
+        #pdfContent .pdf-header .pdf-info h2 {
+            font-size: 22px;
+            color: var(--text);
+        }
+        #pdfContent .pdf-header .pdf-info p {
+            font-size: 13px;
+            color: var(--text-light);
+        }
+        #pdfContent .pdf-section {
+            margin-bottom: 20px;
+        }
+        #pdfContent .pdf-section h3 {
+            font-size: 17px;
+            color: var(--primary-dark);
+            border-bottom: 2px solid var(--primary-light);
+            padding-bottom: 4px;
+            margin-bottom: 10px;
+        }
+        #pdfContent .pdf-section p,
+        #pdfContent .pdf-section li {
+            font-size: 14px;
+            line-height: 1.7;
+            color: var(--text);
+        }
+        #pdfContent .pdf-section ul {
+            padding-left: 20px;
+        }
+        #pdfContent .pdf-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 12px 0;
+        }
+        #pdfContent .pdf-table th,
+        #pdfContent .pdf-table td {
+            padding: 10px 14px;
+            border: 1px solid var(--border);
+            text-align: left;
+            font-size: 14px;
+        }
+        #pdfContent .pdf-table th {
+            background: var(--primary);
+            color: #fff;
+            font-weight: 600;
+        }
+        #pdfContent .pdf-table td {
+            background: #fff;
+        }
+        #pdfContent .pdf-table .total-row {
+            background: var(--primary-light);
+            font-weight: 700;
+        }
+        #pdfContent .pdf-beneficios {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px 16px;
+            margin: 8px 0;
+        }
+        #pdfContent .pdf-beneficios span {
+            background: var(--bg);
+            padding: 4px 14px;
+            border-radius: 20px;
+            font-size: 13px;
+            border: 1px solid var(--primary-light);
+        }
+        #pdfContent .pdf-politicas {
+            background: #faf5f5;
+            padding: 14px 18px;
+            border-radius: 8px;
+            border-left: 4px solid var(--secondary);
+            font-size: 13px;
+            line-height: 1.7;
+        }
+        #pdfContent .pdf-footer {
+            text-align: center;
+            border-top: 2px solid var(--border);
+            padding-top: 16px;
+            margin-top: 24px;
+            font-size: 12px;
+            color: var(--text-light);
+        }
+
+        /* ===== RESPONSIVE ===== */
+        @media (max-width: 768px) {
+            #appContainer {
+                padding: 12px 14px 40px;
+            }
+            .header {
+                padding: 18px 20px;
+                flex-direction: column;
+                text-align: center;
+            }
+            .header-info h1 {
+                font-size: 22px;
+            }
+            .header-contact {
+                justify-content: center;
+                font-size: 13px;
+            }
+            .header-badge {
+                align-self: center;
+            }
+            .progress-container {
+                padding: 14px 12px;
+                overflow-x: auto;
+            }
+            .progress-steps .step .label {
+                font-size: 10px;
+                max-width: 60px;
+            }
+            .progress-steps .step .circle {
+                width: 32px;
+                height: 32px;
+                font-size: 13px;
+            }
+            .section-card {
+                padding: 20px 18px;
+            }
+            .section-card h3 {
+                font-size: 18px;
+            }
+            .form-grid {
+                grid-template-columns: 1fr;
+                gap: 16px;
+            }
+            .especialidades-grid {
+                grid-template-columns: 1fr;
+            }
+            .logistica-grid {
+                grid-template-columns: 1fr;
+            }
+            .resumo-grid {
+                grid-template-columns: 1fr;
+            }
+            .nav-buttons {
+                flex-direction: column;
+            }
+            .nav-buttons .btn {
+                width: 100%;
+                justify-content: center;
+            }
+            .plano-destaque {
+                flex-direction: column;
+                text-align: center;
+            }
+            .login-box {
+                padding: 32px 24px 28px;
+            }
+            .perguntas-list {
+                gap: 14px;
+            }
+            .pergunta-item {
+                padding: 14px 16px;
+            }
+            .dia-item {
+                flex-wrap: wrap;
+            }
+            .dia-item label {
+                min-width: 50px;
+            }
+            #pdfContent {
+                padding: 20px 16px;
+            }
+            #pdfContent .pdf-header {
+                flex-direction: column;
+                text-align: center;
+            }
+            #pdfContent .pdf-table th,
+            #pdfContent .pdf-table td {
+                padding: 6px 8px;
+                font-size: 12px;
+            }
+        }
+        @media (max-width: 480px) {
+            .header-logo {
+                width: 56px;
+                height: 56px;
+                font-size: 22px;
+            }
+            .section-card h3 .num {
+                width: 26px;
+                height: 26px;
+                font-size: 13px;
+            }
+            .section-card .desc {
+                margin-left: 0;
+            }
+            .progress-steps .step .label {
+                font-size: 9px;
+                max-width: 50px;
+            }
+        }
+
+        /* ===== LOADING ===== */
+        .spinner {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid rgba(255, 255, 255, 0.3);
+            border-top-color: #fff;
+            border-radius: 50%;
+            animation: spin 0.6s linear infinite;
+        }
+        @keyframes spin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        /* ===== MISC ===== */
+        .text-center {
+            text-align: center;
+        }
+        .mt-8 {
+            margin-top: 8px;
+        }
+        .mt-16 {
+            margin-top: 16px;
+        }
+        .gap-8 {
+            gap: 8px;
+        }
+        .flex-center {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .tag {
+            display: inline-block;
+            background: var(--primary-light);
+            color: var(--primary-dark);
+            padding: 2px 12px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+        .tag.roza {
+            background: var(--secondary-light);
+            color: #8b5e5e;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- ==================== LOGIN ==================== -->
+    <div id="loginOverlay">
+        <div class="login-box">
+            <div class="logo-login">ES</div>
+            <h2>Espaço Sentir</h2>
+            <p class="sub">Acesse o sistema de orçamento</p>
+            <form id="loginForm" autocomplete="off">
+                <div class="input-group">
+                    <label for="senhaInput">Senha de acesso</label>
+                    <input type="password" id="senhaInput" placeholder="Digite a senha" required autofocus />
+                </div>
+                <button type="submit" class="btn-primary">Entrar</button>
+                <div class="login-error" id="loginError"></div>
+            </form>
+        </div>
+    </div>
+
+    <!-- ==================== APP ==================== -->
+    <div id="appContainer">
+
+        <!-- HEADER -->
+        <header class="header">
+            <div class="header-logo">ES</div>
+            <div class="header-info">
+                <h1>Espaço Sentir</h1>
+                <div class="tagline">Clínica Infantil • Orçamento Personalizado</div>
+                <div class="header-contact">
+                    <span><i>📞</i> (86) 98883-1882</span>
+                    <span><i>✉️</i> espacoseentir@gmail.com</span>
+                    <span><i>📍</i> Rua Padre Domingos, 423, Centro - Piripiri</span>
+                </div>
+            </div>
+            <div class="header-badge">🔒 Área Restrita</div>
+        </header>
+
+        <!-- PROGRESS -->
+        <div class="progress-container">
+            <div class="progress-steps" id="progressSteps">
+                <div class="step active" data-step="1">
+                    <div class="circle">1</div>
+                    <div class="label">Criança</div>
+                </div>
+                <div class="step" data-step="2">
+                    <div class="circle">2</div>
+                    <div class="label">Escuta Ativa</div>
+                </div>
+                <div class="step" data-step="3">
+                    <div class="circle">3</div>
+                    <div class="label">Prescrição</div>
+                </div>
+                <div class="step" data-step="4">
+                    <div class="circle">4</div>
+                    <div class="label">Logística</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ===== SECTION 1: DADOS DA CRIANÇA ===== -->
+        <div class="section-card active" id="section1">
+            <h3><span class="num">1</span> Dados da Criança</h3>
+            <p class="desc">Informações básicas para iniciar o orçamento.</p>
+            <div class="form-grid">
+                <div class="form-group">
+                    <label for="criancaNome">Nome da criança <span class="required">*</span></label>
+                    <input type="text" id="criancaNome" placeholder="Nome completo" required />
+                </div>
+                <div class="form-group">
+                    <label for="criancaIdade">Idade <span class="required">*</span></label>
+                    <input type="text" id="criancaIdade" placeholder="Ex: 5 anos" required />
+                </div>
+                <div class="form-group full">
+                    <label for="criancaDiagnostico">Diagnóstico / Observações</label>
+                    <textarea id="criancaDiagnostico" placeholder="Descreva o diagnóstico ou principais queixas..."></textarea>
+                </div>
+            </div>
+            <div class="nav-buttons">
+                <div></div>
+                <button class="btn btn-primary" onclick="nextSection(1)">Próximo →</button>
+            </div>
+        </div>
+
+        <!-- ===== SECTION 2: ESCUTA ATIVA ===== -->
+        <div class="section-card" id="section2">
+            <h3><span class="num">2</span> Escuta Ativa — A Dor dos Pais</h3>
+            <p class="desc">Conte-nos um pouco sobre as dificuldades e expectativas da família.</p>
+            <div class="perguntas-list" id="perguntasList">
+                <div class="pergunta-item">
+                    <div class="q"><span class="num-q">1.</span> Quais são as principais dificuldades que você observa no dia a dia do seu filho?</div>
+                    <textarea id="pergunta1" placeholder="Descreva as dificuldades..."></textarea>
+                </div>
+                <div class="pergunta-item">
+                    <div class="q"><span class="num-q">2.</span> O que mais te preocupa em relação ao desenvolvimento dele(a)?</div>
+                    <textarea id="pergunta2" placeholder="Compartilhe suas preocupações..."></textarea>
+                </div>
+                <div class="pergunta-item">
+                    <div class="q"><span class="num-q">3.</span> Como você descreveria a rotina atual da sua família?</div>
+                    <textarea id="pergunta3" placeholder="Descreva a rotina..."></textarea>
+                </div>
+                <div class="pergunta-item">
+                    <div class="q"><span class="num-q">4.</span> Quais desafios você enfrenta para apoiar o tratamento do seu filho?</div>
+                    <textarea id="pergunta4" placeholder="Cite os desafios..."></textarea>
+                </div>
+                <div class="pergunta-item">
+                    <div class="q"><span class="num-q">5.</span> O que você espera alcançar com o acompanhamento terapêutico?</div>
+                    <textarea id="pergunta5" placeholder="Quais são suas expectativas?"></textarea>
+                </div>
+            </div>
+            <div class="nav-buttons">
+                <button class="btn btn-secondary" onclick="prevSection(2)">← Voltar</button>
+                <button class="btn btn-primary" onclick="nextSection(2)">Próximo →</button>
+            </div>
+        </div>
+
+        <!-- ===== SECTION 3: PRESCRIÇÃO TERAPÊUTICA ===== -->
+        <div class="section-card" id="section3">
+            <h3><span class="num">3</span> Prescrição Terapêutica</h3>
+            <p class="desc">Selecione as especialidades e defina a frequência semanal.</p>
+            <div class="especialidades-grid" id="especialidadesGrid">
+                <div class="esp-item" data-esp="to">
+                    <input type="checkbox" id="espTO" />
+                    <div class="esp-info">
+                        <div class="esp-nome">Terapia Ocupacional</div>
+                        <div class="esp-desc">Integração sensorial, coordenação motora</div>
+                    </div>
+                    <select class="freq-select" id="freqTO" disabled>
+                        <option value="1">1x/semana</option>
+                        <option value="2">2x/semana</option>
+                        <option value="3">3x/semana</option>
+                        <option value="4">4x/semana</option>
+                        <option value="5">5x/semana</option>
+                    </select>
+                </div>
+                <div class="esp-item" data-esp="fono">
+                    <input type="checkbox" id="espFono" />
+                    <div class="esp-info">
+                        <div class="esp-nome">Fonoaudiologia</div>
+                        <div class="esp-desc">Fala, linguagem, comunicação</div>
+                    </div>
+                    <select class="freq-select" id="freqFono" disabled>
+                        <option value="1">1x/semana</option>
+                        <option value="2">2x/semana</option>
+                        <option value="3">3x/semana</option>
+                        <option value="4">4x/semana</option>
+                        <option value="5">5x/semana</option>
+                    </select>
+                </div>
+                <div class="esp-item" data-esp="psico">
+                    <input type="checkbox" id="espPsico" />
+                    <div class="esp-info">
+                        <div class="esp-nome">Psicologia</div>
+                        <div class="esp-desc">Apoio emocional, comportamental</div>
+                    </div>
+                    <select class="freq-select" id="freqPsico" disabled>
+                        <option value="1">1x/semana</option>
+                        <option value="2">2x/semana</option>
+                        <option value="3">3x/semana</option>
+                        <option value="4">4x/semana</option>
+                        <option value="5">5x/semana</option>
+                    </select>
+                </div>
+                <div class="esp-item" data-esp="psicoped">
+                    <input type="checkbox" id="espPsicoped" />
+                    <div class="esp-info">
+                        <div class="esp-nome">Psicopedagogia</div>
+                        <div class="esp-desc">Aprendizagem, alfabetização</div>
+                    </div>
+                    <select class="freq-select" id="freqPsicoped" disabled>
+                        <option value="1">1x/semana</option>
+                        <option value="2">2x/semana</option>
+                        <option value="3">3x/semana</option>
+                        <option value="4">4x/semana</option>
+                        <option value="5">5x/semana</option>
+                    </select>
+                </div>
+                <div class="esp-item" data-esp="fisio">
+                    <input type="checkbox" id="espFisio" />
+                    <div class="esp-info">
+                        <div class="esp-nome">Fisioterapia</div>
+                        <div class="esp-desc">Motricidade grossa, equilíbrio</div>
+                    </div>
+                    <select class="freq-select" id="freqFisio" disabled>
+                        <option value="1">1x/semana</option>
+                        <option value="2">2x/semana</option>
+                        <option value="3">3x/semana</option>
+                        <option value="4">4x/semana</option>
+                        <option value="5">5x/semana</option>
+                    </select>
+                </div>
+                <div class="esp-item" data-esp="musico">
+                    <input type="checkbox" id="espMusico" />
+                    <div class="esp-info">
+                        <div class="esp-nome">Musicoterapia</div>
+                        <div class="esp-desc">Expressão, socialização</div>
+                    </div>
+                    <select class="freq-select" id="freqMusico" disabled>
+                        <option value="1">1x/semana</option>
+                        <option value="2">2x/semana</option>
+                        <option value="3">3x/semana</option>
+                        <option value="4">4x/semana</option>
+                        <option value="5">5x/semana</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- PLANO DESTAQUE -->
+            <div class="plano-destaque" id="planoDestaque">
+                <div>
+                    <div class="plano-nome" id="planoNome">📍 Plano ESSENCIAL</div>
+                    <div style="font-size:14px;color:var(--text-light);" id="planoSessoes">1 sessão por semana</div>
+                </div>
+                <div>
+                    <div class="plano-preco" id="planoPreco">R$ 465,60 <small>/mês</small></div>
+                </div>
+            </div>
+
+            <div class="nav-buttons">
+                <button class="btn btn-secondary" onclick="prevSection(3)">← Voltar</button>
+                <button class="btn btn-primary" onclick="nextSection(3)">Próximo →</button>
+            </div>
+        </div>
+
+        <!-- ===== SECTION 4: LOGÍSTICA ===== -->
+        <div class="section-card" id="section4">
+            <h3><span class="num">4</span> Logística</h3>
+            <p class="desc">Organize os detalhes práticos do atendimento.</p>
+            <div class="logistica-grid">
+                <div class="form-group">
+                    <label for="quemTrazNome">Quem traz a criança? (Nome) <span class="required">*</span></label>
+                    <input type="text" id="quemTrazNome" placeholder="Nome do responsável" required />
+                </div>
+                <div class="form-group">
+                    <label for="quemTrazParentesco">Parentesco</label>
+                    <select id="quemTrazParentesco">
+                        <option value="Mãe">Mãe</option>
+                        <option value="Pai">Pai</option>
+                        <option value="Avó/Avô">Avó / Avô</option>
+                        <option value="Tio/Tia">Tio / Tia</option>
+                        <option value="Responsável legal">Responsável legal</option>
+                        <option value="Outro">Outro</option>
+                    </select>
+                </div>
+            </div>
+            <div style="margin-top:16px;">
+                <label style="font-weight:600;font-size:14px;">Dias e horários disponíveis <span class="required">*</span></label>
+                <div class="dias-horarios" id="diasHorarios">
+                    <div class="dia-item">
+                        <label>Segunda</label>
+                        <input type="time" id="diaSeg" value="08:00" />
+                    </div>
+                    <div class="dia-item">
+                        <label>Terça</label>
+                        <input type="time" id="diaTer" value="08:00" />
+                    </div>
+                    <div class="dia-item">
+                        <label>Quarta</label>
+                        <input type="time" id="diaQua" value="08:00" />
+                    </div>
+                    <div class="dia-item">
+                        <label>Quinta</label>
+                        <input type="time" id="diaQui" value="08:00" />
+                    </div>
+                    <div class="dia-item">
+                        <label>Sexta</label>
+                        <input type="time" id="diaSex" value="08:00" />
+                    </div>
+                    <div class="dia-item">
+                        <label>Sábado</label>
+                        <input type="time" id="diaSab" value="08:00" />
+                    </div>
+                </div>
+                <div class="hint" style="margin-top:6px;">Defina os horários disponíveis para cada dia da semana.</div>
+            </div>
+            <div class="nav-buttons">
+                <button class="btn btn-secondary" onclick="prevSection(4)">← Voltar</button>
+                <button class="btn btn-success" onclick="gerarResumo()">📋 Gerar Resumo & PDF</button>
+            </div>
+        </div>
+
+        <!-- ===== RESUMO FINAL ===== -->
+        <div id="resumoFinal">
+            <h3>📄 Resumo do Orçamento</h3>
+            <p style="color:var(--text-light);margin-bottom:18px;">Revise as informações antes de gerar o PDF.</p>
+            <div class="resumo-grid" id="resumoGrid"></div>
+            <div class="nav-buttons" style="margin-top:24px;">
+                <button class="btn btn-secondary" onclick="voltarEditar()">✏️ Editar informações</button>
+                <button class="btn btn-pdf" id="btnGerarPDF" onclick="gerarPDF()">
+                    <span id="pdfBtnText">📄 Gerar PDF</span>
+                    <span id="pdfBtnSpinner" class="spinner" style="display:none;"></span>
+                </button>
+            </div>
+        </div>
+
+        <!-- ===== PDF CONTEÚDO OCULTO ===== -->
+        <div id="pdfContent"></div>
+
+    </div>
+
+    <!-- ==================== JAVASCRIPT ==================== -->
+    <script>
+        (function() {
+            'use strict';
+
+            // ========== CONSTANTS ==========
+            const CORRECT_PASSWORD = 'espacosentir2025';
+            const CLINICA = {
+                nome: 'Espaço Sentir',
+                logo: 'ES',
+                telefone: '(86) 98883-1882',
+                email: 'espacoseentir@gmail.com',
+                endereco: 'Rua Padre Domingos, nº 423, Centro - Piripiri',
+                primary: '#7BA8C4',
+                secondary: '#D4A5A5'
+            };
+
+            const PLANOS = {
+                1: { nome: 'ESSENCIAL', preco: 465.60, label: '1x por semana' },
+                2: { nome: 'INTENSIVO', preco: 439.00, label: '2x por semana' },
+                3: { nome: 'AVANÇADO', preco: 413.60, label: '3x por semana' },
+                4: { nome: 'AVANÇADO', preco: 413.60, label: '4x por semana' },
+                5: { nome: 'AVANÇADO', preco: 413.60, label: '5x por semana' }
+            };
+
+            const ESPECIALIDADES_MAP = {
+                to: 'Terapia Ocupacional',
+                fono: 'Fonoaudiologia',
+                psico: 'Psicologia',
+                psicoped: 'Psicopedagogia',
+                fisio: 'Fisioterapia',
+                musico: 'Musicoterapia'
+            };
+
+            const BENEFICIOS = [
+                'Acompanhamento individualizado',
+                'Relatórios trimestrais de evolução',
+                'Reuniões com a equipe multidisciplinar',
+                'Suporte via WhatsApp com a equipe',
+                'Orientações para casa e escola',
+                'Agenda flexível com remarcação'
+            ];
+
+            const POLITICAS = [
+                'A contratação do plano implica a aceitação das políticas da clínica.',
+                'Faltas não avisadas com 24h de antecedência serão cobradas.',
+                'O pacote de sessões tem validade de 30 dias corridos.',
+                'O valor contratado será reajustado anualmente conforme índice IPCA.',
+                'O presente orçamento tem validade de 7 dias a partir da data de emissão.',
+                'Pagamento antecipado garante 5% de desconto sobre o valor total do mês.'
+            ];
+
+            // ========== STATE ==========
+            let currentStep = 1;
+            const totalSteps = 4;
+
+            // ========== DOM REFS ==========
+            const loginOverlay = document.getElementById('loginOverlay');
+            const loginForm = document.getElementById('loginForm');
+            const senhaInput = document.getElementById('senhaInput');
+            const loginError = document.getElementById('loginError');
+            const appContainer = document.getElementById('appContainer');
+            const sections = {
+                1: document.getElementById('section1'),
+                2: document.getElementById('section2'),
+                3: document.getElementById('section3'),
+                4: document.getElementById('section4')
+            };
+            const progressSteps = document.querySelectorAll('.progress-steps .step');
+            const resumoFinal = document.getElementById('resumoFinal');
+            const resumoGrid = document.getElementById('resumoGrid');
+
+            // ========== LOGIN ==========
+            loginForm.addEventListener('submit', function(e) {
+                e.preventDefault();
+                const pw = senhaInput.value.trim();
+                if (pw === CORRECT_PASSWORD) {
+                    loginOverlay.classList.add('hidden');
+                    appContainer.classList.add('active');
+                    loginError.textContent = '';
+                    senhaInput.value = '';
+                } else {
+                    loginError.textContent = '❌ Senha incorreta. Tente novamente.';
+                    senhaInput.focus();
+                    senhaInput.select();
+                }
+            });
+
+            // ========== NAVEGAÇÃO ==========
+            window.nextSection = function(from) {
+                if (from === 1) {
+                    const nome = document.getElementById('criancaNome').value.trim();
+                    const idade = document.getElementById('criancaIdade').value.trim();
+                    if (!nome || !idade) {
+                        alert('Preencha o nome e a idade da criança para continuar.');
+                        return;
+                    }
+                }
+                if (from < totalSteps) {
+                    goToStep(from + 1);
+                }
+            };
+
+            window.prevSection = function(from) {
+                if (from > 1) {
+                    goToStep(from - 1);
+                }
+            };
+
+            function goToStep(step) {
+                currentStep = step;
+                // hide all sections
+                Object.values(sections).forEach(s => s.classList.remove('active'));
+                sections[step].classList.add('active');
+                // update progress
+                progressSteps.forEach(el => {
+                    const s = parseInt(el.dataset.step);
+                    el.classList.remove('active', 'done');
+                    if (s === step) el.classList.add('active');
+                    else if (s < step) el.classList.add('done');
+                });
+                // scroll to top
+                document.querySelector('.progress-container').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+                // update plan on section 3
+                if (step === 3) calcularPlano();
+                // hide resumo if visible
+                resumoFinal.classList.remove('active');
+            }
+
+            // ========== ESPECIALIDADES TOGGLE ==========
+            document.querySelectorAll('.esp-item input[type="checkbox"]').forEach(cb => {
+                cb.addEventListener('change', function() {
+                    const item = this.closest('.esp-item');
+                    const select = item.querySelector('.freq-select');
+                    if (this.checked) {
+                        item.classList.add('selected');
+                        select.disabled = false;
+                    } else {
+                        item.classList.remove('selected');
+                        select.disabled = true;
+                        select.value = '1';
+                    }
+                    calcularPlano();
+                });
+            });
+
+            document.querySelectorAll('.esp-item .freq-select').forEach(sel => {
+                sel.addEventListener('change', calcularPlano);
+            });
+
+            // ========== CÁLCULO DO PLANO ==========
+            function calcularPlano() {
+                let totalSessoes = 0;
+                const especialidadesSelecionadas = [];
+
+                document.querySelectorAll('.esp-item').forEach(item => {
+                    const cb = item.querySelector('input[type="checkbox"]');
+                    if (cb.checked) {
+                        const freq = parseInt(item.querySelector('.freq-select').value) || 1;
+                        totalSessoes += freq;
+                        const key = item.dataset.esp;
+                        especialidadesSelecionadas.push({
+                            nome: ESPECIALIDADES_MAP[key] || key,
+                            freq: freq
+                        });
+                    }
+                });
+
+                if (totalSessoes === 0) {
+                    // default ESSENCIAL
+                    const plano = PLANOS[1];
+                    document.getElementById('planoNome').textContent = '📍 Plano ' + plano.nome;
+                    document.getElementById('planoSessoes').textContent = '1 sessão por semana (padrão)';
+                    document.getElementById('planoPreco').innerHTML = 'R$ ' + plano.preco.toFixed(2).replace('.', ',') +
+                        ' <small>/mês</small>';
+                    return;
+                }
+
+                // Determine plan based on total sessions per week
+                let chave;
+                if (totalSessoes >= 3) chave = 3;
+                else if (totalSessoes === 2) chave = 2;
+                else chave = 1;
+
+                const plano = PLANOS[chave];
+                document.getElementById('planoNome').textContent = '📍 Plano ' + plano.nome;
+                document.getElementById('planoSessoes').textContent = totalSessoes + ' sessões por semana';
+                document.getElementById('planoPreco').innerHTML = 'R$ ' + (plano.preco * 1).toFixed(2).replace('.', ',') +
+                    ' <small>/mês</small>';
+            }
+
+            // ========== GERAR RESUMO ==========
+            window.gerarResumo = function() {
+                // Validate logistics
+                const nomeResp = document.getElementById('quemTrazNome').value.trim();
+                if (!nomeResp) {
+                    alert('Informe o nome de quem traz a criança.');
+                    document.getElementById('quemTrazNome').focus();
+                    return;
+                }
+
+                // Gather all data
+                const data = gatherData();
+                renderResumo(data);
+                resumoFinal.classList.add('active');
+                resumoFinal.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            };
+
+            function gatherData() {
+                const criancaNome = document.getElementById('criancaNome').value.trim();
+                const criancaIdade = document.getElementById('criancaIdade').value.trim();
+                const criancaDiagnostico = document.getElementById('criancaDiagnostico').value.trim();
+
+                const perguntas = [];
+                for (let i = 1; i <= 5; i++) {
+                    const el = document.getElementById('pergunta' + i);
+                    perguntas.push(el ? el.value.trim() : '');
+                }
+
+                const especialidades = [];
+                let totalSessoes = 0;
+                document.querySelectorAll('.esp-item').forEach(item => {
+                    const cb = item.querySelector('input[type="checkbox"]');
+                    if (cb.checked) {
+                        const freq = parseInt(item.querySelector('.freq-select').value) || 1;
+                        totalSessoes += freq;
+                        const key = item.dataset.esp;
+                        especialidades.push({
+                            nome: ESPECIALIDADES_MAP[key] || key,
+                            freq: freq
+                        });
+                    }
+                });
+
+                if (totalSessoes === 0) totalSessoes = 1;
+                let chave;
+                if (totalSessoes >= 3) chave = 3;
+                else if (totalSessoes === 2) chave = 2;
+                else chave = 1;
+                const plano = PLANOS[chave];
+
+                const quemTrazNome = document.getElementById('quemTrazNome').value.trim();
+                const quemTrazParentesco = document.getElementById('quemTrazParentesco').value;
+
+                const dias = [];
+                const diasMap = [
+                    { id: 'diaSeg', label: 'Segunda' },
+                    { id: 'diaTer', label: 'Terça' },
+                    { id: 'diaQua', label: 'Quarta' },
+                    { id: 'diaQui', label: 'Quinta' },
+                    { id: 'diaSex', label: 'Sexta' },
+                    { id: 'diaSab', label: 'Sábado' }
+                ];
+                diasMap.forEach(d => {
+                    const el = document.getElementById(d.id);
+                    if (el && el.value) {
+                        dias.push({ dia: d.label, horario: el.value });
+                    }
+                });
+
+                return {
+                    crianca: { nome: criancaNome, idade: criancaIdade, diagnostico: criancaDiagnostico },
+                    perguntas: perguntas,
+                    especialidades: especialidades,
+                    totalSessoes: totalSessoes,
+                    plano: plano,
+                    chave: chave,
+                    logistica: { responsavel: quemTrazNome, parentesco: quemTrazParentesco, dias: dias },
+                    dataEmissao: new Date()
+                };
+            }
+
+            function renderResumo(data) {
+                const d = data;
+                const precoTotal = d.plano.preco;
+                const desconto = precoTotal * 0.05;
+                const precoComDesconto = precoTotal - desconto;
+
+                let espHtml = '';
+                if (d.especialidades.length === 0) {
+                    espHtml = '<li>Nenhuma especialidade selecionada (padrão 1x/semana)</li>';
+                } else {
+                    d.especialidades.forEach(e => {
+                        espHtml += '<li>' + e.nome + ' — ' + e.freq + 'x/semana</li>';
+                    });
+                }
+
+                let diasHtml = '';
+                if (d.logistica.dias.length === 0) {
+                    diasHtml = '<li>Não informado</li>';
+                } else {
+                    d.logistica.dias.forEach(dia => {
+                        diasHtml += '<li>' + dia.dia + ' às ' + dia.horario + '</li>';
+                    });
+                }
+
+                // Build resumo text from perguntas
+                const dorText = buildDorText(d.perguntas);
+
+                resumoGrid.innerHTML = `
+                    <div class="bloco">
+                        <h4>👶 Criança</h4>
+                        <p><strong>${d.crianca.nome}</strong> · ${d.crianca.idade}</p>
+                        ${d.crianca.diagnostico ? '<p style="margin-top:4px;font-size:13px;color:var(--text-light);">' + d.crianca.diagnostico + '</p>' : ''}
+                    </div>
+                    <div class="bloco">
+                        <h4>🎯 Plano Terapêutico</h4>
+                        <p><strong>${d.plano.nome}</strong> · ${d.totalSessoes} sessões/semana</p>
+                        <ul>${espHtml}</ul>
+                    </div>
+                    <div class="bloco">
+                        <h4>💬 Escuta Ativa — Dor dos Pais</h4>
+                        <p style="font-size:13px;line-height:1.7;">${dorText}</p>
+                    </div>
+                    <div class="bloco">
+                        <h4>📅 Logística</h4>
+                        <p><strong>Responsável:</strong> ${d.logistica.responsavel} (${d.logistica.parentesco})</p>
+                        <ul>${diasHtml}</ul>
+                    </div>
+                    <div class="bloco" style="grid-column:1/-1;">
+                        <h4>💰 Orçamento</h4>
+                        <div style="display:flex;flex-wrap:wrap;gap:20px 40px;margin-top:8px;">
+                            <div><strong>Plano:</strong> ${d.plano.nome}</div>
+                            <div><strong>Valor mensal:</strong> R$ ${precoTotal.toFixed(2).replace('.',',')}</div>
+                            <div><strong>Desconto 5% (antecipação):</strong> -R$ ${desconto.toFixed(2).replace('.',',')}</div>
+                            <div style="font-size:20px;font-weight:700;color:var(--primary-dark);">💰 Com desconto: R$ ${precoComDesconto.toFixed(2).replace('.',',')}/mês</div>
+                        </div>
+                        <div style="margin-top:10px;font-size:13px;color:var(--text-light);">⏳ Validade: 7 dias a partir de ${d.dataEmissao.toLocaleDateString('pt-BR')}</div>
+                    </div>
+                `;
+            }
+
+            function buildDorText(perguntas) {
+                const hasContent = perguntas.some(p => p.trim().length > 0);
+                if (!hasContent) return 'Sem relato registrado.';
+                let lines = [];
+                const labels = [
+                    'Dificuldades no dia a dia',
+                    'Preocupações com o desenvolvimento',
+                    'Rotina familiar',
+                    'Desafios para apoiar o tratamento',
+                    'Expectativas com o acompanhamento'
+                ];
+                perguntas.forEach((p, i) => {
+                    if (p.trim()) {
+                        lines.push('<strong>' + labels[i] + ':</strong> ' + p.trim());
+                    }
+                });
+                return lines.join('<br>');
+            }
+
+            // ========== VOLTAR EDITAR ==========
+            window.voltarEditar = function() {
+                resumoFinal.classList.remove('active');
+                goToStep(1);
+            };
+
+            // ========== GERAR PDF ==========
+            window.gerarPDF = function() {
+                const data = gatherData();
+                const btn = document.getElementById('btnGerarPDF');
+                const btnText = document.getElementById('pdfBtnText');
+                const btnSpinner = document.getElementById('pdfBtnSpinner');
+                btn.disabled = true;
+                btnText.textContent = 'Gerando PDF...';
+                btnSpinner.style.display = 'inline-block';
+
+                // Build PDF content
+                const pdfContent = document.getElementById('pdfContent');
+                pdfContent.style.display = 'block';
+                pdfContent.innerHTML = buildPDFHTML(data);
+
+                // Generate PDF
+                const opt = {
+                    margin: [10, 12, 10, 12],
+                    filename: 'Orcamento_Espaco_Sentir_' + data.crianca.nome.replace(/\s+/g, '_') + '.pdf',
+                    image: { type: 'jpeg', quality: 0.98 },
+                    html2canvas: {
+                        scale: 2,
+                        useCORS: true,
+                        letterRendering: true,
+                        backgroundColor: '#ffffff'
+                    },
+                    jsPDF: {
+                        unit: 'mm',
+                        format: 'a4',
+                        orientation: 'portrait'
+                    },
+                    pagebreak: { mode: ['avoid-all', 'css', 'legacy'] }
+                };
+
+                html2pdf().set(opt).from(pdfContent).save().then(function() {
+                    btn.disabled = false;
+                    btnText.textContent = '📄 Gerar PDF';
+                    btnSpinner.style.display = 'none';
+                    pdfContent.style.display = 'none';
+                }).catch(function(err) {
+                    console.error('PDF error:', err);
+                    alert('Erro ao gerar PDF. Tente novamente.');
+                    btn.disabled = false;
+                    btnText.textContent = '📄 Gerar PDF';
+                    btnSpinner.style.display = 'none';
+                    pdfContent.style.display = 'none';
+                });
+            };
+
+            function buildPDFHTML(data) {
+                const d = data;
+                const precoTotal = d.plano.preco;
+                const desconto = precoTotal * 0.05;
+                const precoComDesconto = precoTotal - desconto;
+                const hoje = d.dataEmissao.toLocaleDateString('pt-BR');
+                const valido = new Date(d.dataEmissao);
+                valido.setDate(valido.getDate() + 7);
+                const validoStr = valido.toLocaleDateString('pt-BR');
+
+                let espTableRows = '';
+                if (d.especialidades.length === 0) {
+                    espTableRows = `<tr><td>Terapia base</td><td>1x/semana</td><td>R$ ${d.plano.preco.toFixed(2).replace('.',',')}</td></tr>`;
+                } else {
+                    d.especialidades.forEach(e => {
+                        espTableRows += `<tr><td>${e.nome}</td><td>${e.freq}x/semana</td><td>—</td></tr>`;
+                    });
+                }
+
+                let diasList = '';
+                if (d.logistica.dias.length > 0) {
+                    diasList = d.logistica.dias.map(dia => dia.dia + ' às ' + dia.horario).join(' · ');
+                } else {
+                    diasList = 'A combinar';
+                }
+
+                const dorText = buildDorTextParaPDF(d.perguntas);
+
+                return `
+                    <div class="pdf-header">
+                        <div class="pdf-logo">ES</div>
+                        <div class="pdf-info">
+                            <h2>Espaço Sentir</h2>
+                            <p>${CLINICA.endereco} · ${CLINICA.telefone} · ${CLINICA.email}</p>
+                        </div>
+                    </div>
+
+                    <div class="pdf-section">
+                        <h3>👶 Dados da Criança</h3>
+                        <p><strong>${d.crianca.nome}</strong> · ${d.crianca.idade}</p>
+                        ${d.crianca.diagnostico ? '<p style="margin-top:4px;"><em>Diagnóstico:</em> ' + d.crianca.diagnostico + '</p>' : ''}
+                    </div>
+
+                    <div class="pdf-section">
+                        <h3>💬 Escuta Ativa — A Dor dos Pais</h3>
+                        <p>${dorText}</p>
+                        <p style="margin-top:8px;font-style:italic;color:var(--primary-dark);">
+                            → A partir desse olhar, construímos um plano terapêutico personalizado para transformar desafios em conquistas.
+                        </p>
+                    </div>
+
+                    <div class="pdf-section">
+                        <h3>📋 Plano Terapêutico</h3>
+                        <table class="pdf-table">
+                            <thead>
+                                <tr><th>Especialidade</th><th>Frequência</th><th>Valor</th></tr>
+                            </thead>
+                            <tbody>
+                                ${espTableRows}
+                                <tr class="total-row">
+                                    <td><strong>Plano ${d.plano.nome}</strong></td>
+                                    <td><strong>${d.totalSessoes} sessões/semana</strong></td>
+                                    <td><strong>R$ ${precoTotal.toFixed(2).replace('.',',')}/mês</strong></td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <div class="pdf-section">
+                        <h3>💰 Tabela de Orçamento</h3>
+                        <table class="pdf-table">
+                            <thead>
+                                <tr><th>Descrição</th><th>Valor</th></tr>
+                            </thead>
+                            <tbody>
+                                <tr><td>Plano ${d.plano.nome} — ${d.totalSessoes}x/semana</td><td>R$ ${precoTotal.toFixed(2).replace('.',',')}</td></tr>
+                                <tr><td>Desconto por antecipação (5%)</td><td>-R$ ${desconto.toFixed(2).replace('.',',')}</td></tr>
+                                <tr class="total-row"><td><strong>Total com desconto</strong></td><td><strong>R$ ${precoComDesconto.toFixed(2).replace('.',',')}/mês</strong></td></tr>
+                            </tbody>
+                        </table>
+                        <p style="font-size:13px;color:var(--text-light);margin-top:6px;">⏳ Validade: ${validoStr} · Emitido em: ${hoje}</p>
+                    </div>
+
+                    <div class="pdf-section">
+                        <h3>🎁 Benefícios Inclusos</h3>
+                        <div class="pdf-beneficios">
+                            ${BENEFICIOS.map(b => '<span>✓ ' + b + '</span>').join('')}
+                        </div>
+                    </div>
+
+                    <div class="pdf-section">
+                        <h3>📜 Logística</h3>
+                        <p><strong>Responsável:</strong> ${d.logistica.responsavel} (${d.logistica.parentesco})</p>
+                        <p><strong>Dias/Horários:</strong> ${diasList}</p>
+                    </div>
+
+                    <div class="pdf-section">
+                        <h3>📌 Políticas do Contrato</h3>
+                        <div class="pdf-politicas">
+                            <ol style="padding-left:20px;margin:0;">
+                                ${POLITICAS.map(p => '<li>' + p + '</li>').join('')}
+                            </ol>
+                        </div>
+                    </div>
+
+                    <div class="pdf-section" style="text-align:center;border:2px dashed var(--primary);border-radius:12px;padding:20px;">
+                        <p style="font-size:18px;font-weight:700;color:var(--primary-dark);">💙 Equipe Espaço Sentir</p>
+                        <p style="font-size:14px;color:var(--text-light);">Cuidando do desenvolvimento com amor e respeito.</p>
+                        <p style="font-size:13px;margin-top:6px;">${CLINICA.telefone} · ${CLINICA.email}</p>
+                    </div>
+
+                    <div class="pdf-footer">
+                        <p>Espaço Sentir — ${CLINICA.endereco} · Documento gerado em ${hoje}</p>
+                        <p style="font-size:11px;">© Todos os direitos reservados.</p>
+                    </div>
+                `;
+            }
+
+            function buildDorTextParaPDF(perguntas) {
+                const hasContent = perguntas.some(p => p.trim().length > 0);
+                if (!hasContent) return 'A família não registrou relato específico neste momento.';
+                let lines = [];
+                const labels = [
+                    'Dificuldades no dia a dia',
+                    'Preocupações com o desenvolvimento',
+                    'Rotina familiar',
+                    'Desafios para apoiar o tratamento',
+                    'Expectativas com o acompanhamento'
+                ];
+                perguntas.forEach((p, i) => {
+                    if (p.trim()) {
+                        lines.push('<strong>' + labels[i] + ':</strong> ' + p.trim());
+                    }
+                });
+                if (lines.length === 0) return 'A família não registrou relato específico neste momento.';
+                return lines.join('<br>');
+            }
+
+            // ========== INIT ==========
+            // Load default plan display
+            calcularPlano();
+
+            // Allow enter key to go through sections
+            document.addEventListener('keydown', function(e) {
+                if (e.key === 'Enter') {
+                    const activeSection = document.querySelector('.section-card.active');
+                    if (activeSection) {
+                        const id = activeSection.id;
+                        const num = parseInt(id.replace('section', ''));
+                        if (num < totalSteps) {
+                            // only if not in a textarea
+                            const tag = e.target.tagName;
+                            if (tag !== 'TEXTAREA' && tag !== 'INPUT' && tag !== 'SELECT') {
+                                nextSection(num);
+                            }
+                        }
+                    }
+                }
+            });
+
+            // Focus on login
+            senhaInput.focus();
+
+        })();
+    </script>
+
+</body>
+</html>
